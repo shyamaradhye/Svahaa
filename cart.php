@@ -1,0 +1,397 @@
+<?php
+    session_start();
+    include("connection.php");
+    include("functions.php");
+    
+    $user_data = check_login($con);
+
+    if($_SERVER['REQUEST_METHOD'] == "POST")
+    {
+        $order_id = random_num(10);
+        $user_id = $user_data['user_id'];
+        $user_name = $user_data['user_name'];
+        $total = $_SESSION["total_amount"];
+        $id = $user_data['id'];
+        $cartname = "cart";
+        $cartname .= "$id";
+        
+        $query1 = "INSERT INTO `orders` (`order_id`, `user_id`, `user_name`, `total_amount`) VALUES ('$order_id', '$user_id', '$user_name', '$total')";
+        $result1 = mysqli_query($con, $query1);
+
+        // query to subtract from inventory
+        /*
+        $query1 = "UPDATE `inventory` SET `inventory_quantity` = `inventory_quantity` - $quantity WHERE `inventory`.`inventory_prod_id` = 10001";
+        mysqli_query($con, $query1);
+        "DELETE FROM `login_db`.`cart18`"
+        */
+
+        // to chnage inventory
+        $sql1 = "SELECT * FROM `$cartname` ";
+        $result3 = mysqli_query($con,$sql1);
+        while($row1 = mysqli_fetch_assoc($result3))
+        {
+            $id = $row1['prod_id'];
+            $quantity = $row1['quantity'];
+            $query1 = "UPDATE `inventory` SET `inventory_quantity` = `inventory_quantity` - '$quantity' WHERE `inventory_prod_id` = '$id' ";
+            mysqli_query($con, $query1);
+        }  
+        //
+
+        $sql = "DELETE FROM `login_db`.`$cartname`";
+        $result2 = mysqli_query($con,$sql);
+        
+        header("Location: index.php");
+        die;
+    }
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+</head>
+<body>
+<style type="text/css">
+        #text{
+            height: 25px;
+            border-radius: 5px;
+            padding: 4px;
+            border: solid thin #aaa;
+            width: 90%;
+        }
+
+        #button{
+            padding: 10px;
+            width: 100px;
+            color: black;
+            background-color: lightblue;
+            border: solid;
+        }
+
+        #button2{
+            padding: 10px;
+            width: 100px;
+            color: black;
+            background-color: #cb9cf7;
+            border: solid;
+        }
+
+        #box{
+            background-color: pink;
+            margin: auto;
+            width: 300px;
+            padding: 20px;
+            border: solid;
+        }
+
+        body 
+        {
+            background-image: url('logos/background.jpg');
+        }
+
+        #wrapper
+        {
+            position: fixed;
+            display: flex;
+        }
+
+        #first
+        {
+            postion: fixed;
+            float: left;
+            padding-top: 5px;
+            border: 3px solid;
+        }
+
+        #second
+        {
+            position: fixed;
+            float: right;
+            padding-left: 1000px;
+        }
+
+        a:link {
+        color: black;
+        background-color: transparent;
+        text-decoration: none;
+        }
+        a:visited {
+        color: black;
+        background-color: transparent;
+        text-decoration: none;
+        }
+        a:hover {
+        color: black;
+        background-color: transparent;
+        text-decoration: underline;
+        }
+        a:active {
+        color: black;
+        background-color: transparent;
+        text-decoration: underline;
+        }
+
+        .topnav-right {
+        float: right;
+        }
+
+        hr.new5 {
+        border: 10px solid darkblue;
+        border-radius: 5px;
+        }
+
+        /*
+        changes
+        */
+        .row {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0 4px;
+        }
+
+        .column {
+        flex: 50%;
+        padding: 0 4px;
+        }
+        /*
+        changes
+        */
+
+        .container{
+            max-width: 1170px;
+            margin:auto;
+        }
+        .row{
+            display: flex;
+            flex-wrap: wrap;
+        }
+        ul{
+            list-style: none;
+        }
+        .footer{
+            background-color: rgb(171,138,228);
+            padding: 20px 0;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .footer-col{
+        width: 25%;
+        padding: 0 15px;
+        }
+
+        .footer-col h4{
+            font-size: 18px;
+            color: #ffffff;
+            text-transform: capitalize;
+            margin-bottom: 35px;
+            font-weight: 500;
+            position: relative;
+        }
+        .footer-col h4::before{
+            content: '';
+            position: absolute;
+            left:0;
+            bottom: -10px;
+            background-color: #e91e63;
+            height: 2px;
+            box-sizing: border-box;
+            width: 50px;
+        }
+        .footer-col ul li:not(:last-child){
+            margin-bottom: 10px;
+        }
+        .footer-col ul li a{
+            font-size: 16px;
+            text-transform: capitalize;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 300;
+            color: #bbbbbb;
+            display: block;
+            transition: all 0.3s ease;
+        }
+        .footer-col ul li a:hover{
+            color: #ffffff;
+            padding-left: 8px;
+        }
+        .footer-col .social-links a{
+            display: inline-block;
+            height: 40px;
+            width: 40px;
+            background-color: rgba(255,255,255,0.2);
+            margin:0 10px 10px 0;
+            text-align: center;
+            line-height: 40px;
+            border-radius: 50%;
+            color: #ffffff;
+            transition: all 0.5s ease;
+        }
+        .footer-col .social-links a:hover{
+            color: #24262b;
+            background-color: #ffffff;
+        }
+
+        /*responsive*/
+        @media(max-width: 767px){
+        .footer-col{
+            width: 50%;
+            margin-bottom: 30px;
+        }
+        }
+        @media(max-width: 574px){
+        .footer-col{
+            width: 100%;
+        }
+        }
+        
+    </style>
+
+
+    <?php
+    include("_nav.php");
+    ?>
+    <hr class="new5">
+    <center>
+    <h1>Welcome <?php echo $user_data['user_name']; ?>!</h1><br>
+    <h1>Your Cart</h1>
+    <hr class="new5">
+    </center>
+    <br>
+
+    <div class="container mt-4">
+        <table class="table" id="myTable">
+            <thead>
+                <tr>
+                    <th scope="col">Product ID</th>
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                //changes
+                $amount = 0;
+                $id = $user_data['id'];
+                $cartname = "cart";
+                $cartname .= "$id";
+                $sql = "SELECT * FROM `$cartname` ";
+                $result = mysqli_query($con,$sql);
+                while($row = mysqli_fetch_assoc($result))
+                {
+                    echo "<tr>
+                    <th scope='row'>".$row['prod_id']."</th>
+                    <td>".$row['prod_name']."</td>
+                    <td>".$row['prod_amt']."</td>
+                    <td>".$row['quantity']."</td>
+                    </tr>";
+                    $amt = $row['prod_amt'];
+                    $quant = $row['quantity'];
+                    $amount = $amount + ($amt*$quant);
+                }  
+                //changes
+                $_SESSION["total_amount"] = $amount;
+
+                ?>
+            </tbody>
+        </table>
+    </div>
+
+    <br><br><br>
+    <br><br><br>
+
+        <br><br>
+    
+    <center>
+        <h2>Total Amount :- <?php echo $_SESSION["total_amount"]; ?></h2> 
+    </center>
+                
+    <br><br>
+    
+    
+
+    <form method="post">
+                <br><br>
+
+                <center><input id="button" type="submit" value="Buy"><br><br></center>
+                </form>
+
+        <br><br><br>
+
+    <!--
+
+    <div class="row"> 
+        <center>
+        <div class="column">
+            <img src="prod_images/prod1.png" width="200" height="200" align="left">
+            <img src="prod_images/prod2.jpeg" width="200" height="200" align="center">
+            <img src="prod_images/prod3.jpeg" width="200" height="200" align="right">
+        </div>
+        <br>
+        <div class="column">
+            <img src="prod_images/prod1.png" width="200" height="200" align="left">
+            <img src="prod_images/prod2.jpeg" width="200" height="200" align="center">
+            <img src="prod_images/prod3.jpeg" width="200" height="200" align="right">
+        </div>
+        <br>
+        <div class="column">
+            <img src="prod_images/prod1.png" width="200" height="200" align="left">
+            <img src="prod_images/prod2.jpeg" width="200" height="200" align="center">
+            <img src="prod_images/prod3.jpeg" width="200" height="200" align="right">
+        </div>
+        <br>
+        <div class="column">
+            <img src="prod_images/prod1.png" width="200" height="200" align="left">
+            <img src="prod_images/prod2.jpeg" width="200" height="200" align="center">
+            <img src="prod_images/prod3.jpeg" width="200" height="200" align="right">
+        </div>
+        </center>
+    </div>
+
+    -->
+    
+    <br><br><br>
+    <footer class="footer">
+  	 <div class="container mx-4">
+        <!--
+  	 	<div class="row">
+  	 		<div class="footer-col">
+  	 			<h4 style="color:black;">company</h4>
+  	 			<ul>
+  	 				<li><a href="#">about us</a></li>
+  	 				<li><a href="#">our services</a></li>
+  	 				<li><a href="#">privacy policy</a></li>
+  	 				<li><a href="#">affiliate program</a></li>
+  	 			</ul>
+  	 		</div>
+  	 		<div class="footer-col">
+  	 			<h4 style="color:black;">get help</h4>
+  	 			<ul>
+  	 				<li><a href="#">FAQ</a></li>
+  	 				<li><a href="#">shipping</a></li>
+  	 				<li><a href="#">returns</a></li>
+  	 				<li><a href="#">order status</a></li>
+  	 				<li><a href="#">payment options</a></li>
+  	 			</ul>
+  	 		</div>
+  	 	</div>
+    -->
+  	 </div>
+     <br>
+     <center>
+     COEP CT-21001 | Made by Shyam Aradhye, Ved Biilaskar, Adwait Vipra
+    </center>
+  </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+</body>
+</html>

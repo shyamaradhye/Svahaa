@@ -1,0 +1,23 @@
+<?php
+    session_start();
+    include("connection.php");
+    include("functions.php");
+
+    $user_data = check_login($con);
+
+    $cartname = "cart";
+    $id = $user_data['id'];
+    $cartname .= "$id";
+    echo $cartname;
+
+    
+
+    header("Location: cart.php");
+    die;
+    
+
+
+
+
+
+?>
